@@ -1,4 +1,6 @@
-import { OnInit } from '@angular/core';
+import { ComponentRef, ElementRef, ViewContainerRef } from '@angular/core';
+import { OnInit, ViewChild } from '@angular/core';
+import { ComponentFactoryResolver } from '@angular/core';
 import { Component } from '@angular/core';
 import { AxeBehavior } from './patterns/strategy/classes/AxeBehavior/axe-behavior';
 import { BowAndArrowBehavior } from './patterns/strategy/classes/BowAndArrowBehavior/bow-and-arrow-behavior';
@@ -9,6 +11,11 @@ import { Knight } from './patterns/strategy/classes/Knight/knight';
 import { Queen } from './patterns/strategy/classes/Queen/queen';
 import { SwordBehavior } from './patterns/strategy/classes/SwordBehavior/sword-behavior';
 import { Troll } from './patterns/strategy/classes/Troll/troll';
+import { KingComponent } from './patterns/strategy/components/King/king/king.component';
+import { KnightComponent } from './patterns/strategy/components/Knight/knight/knight.component';
+import { QueenComponent } from './patterns/strategy/components/Queen/queen/queen.component';
+import { TrollComponent } from './patterns/strategy/components/Troll/troll/troll.component';
+import { DynamicallyComponentDirective } from './patterns/strategy/directives/DynamicallyComponent/dynamically-component.directive';
 import { WeaponBehavior } from './patterns/strategy/interfaces/WeaponBehavior/weapon-behavior';
 
 @Component({
@@ -17,6 +24,11 @@ import { WeaponBehavior } from './patterns/strategy/interfaces/WeaponBehavior/we
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+
+
+  @ViewChild(DynamicallyComponentDirective, { static: true }) container!: DynamicallyComponentDirective;
+
+  constructor(private componentFactoryResolver: ComponentFactoryResolver) {}
 
   ngOnInit(): void {
     this.createCharacter();
@@ -49,20 +61,31 @@ export class AppComponent implements OnInit {
     this.weapon = this.getWeapon();
 
     this.character.setWeapon(this.weapon);
-    
+
+    const viewContainerRef = this.container.viewContainerRef;
+    viewContainerRef.clear();
+    const componentRef: ComponentRef<any> = viewContainerRef.createComponent(this.character.getComponentType());
+    componentRef.instance.data = this.character.getData();
   }
 
   getCharacter() {
+    let componentFactory;
+    let clase: Character;
     switch (this.characterStr) {
       case 'queen':
-        return new Queen();
+        clase = new Queen();
+        break;
       case 'knight':
-        return new Knight();
+        clase = new Knight();
+        break;
       case 'troll':
-        return new Troll();
+        clase = new Troll();
+        break;
       default:
-        return new King();
+        clase = new King();
+        break;
     }
+    return clase;
   }
 
   getWeapon() {
